@@ -76,6 +76,9 @@ function App() {
     });
   }, [searchTerm, tagFilter]);
 
+  const featuredDeck = filteredDecks[0] || decks[0];
+  const colorCount = new Set(decks.map((deck) => deck.colors)).size;
+
   return (
     <div className="min-h-screen bg-[#f5efe4] text-[#35271f]">
       <div className="mx-auto max-w-[1180px] px-[18px] sm:px-8">
@@ -106,6 +109,19 @@ function App() {
             <a href="#decks" className="inline-block rounded bg-[#35271f] px-5 py-[13px] text-sm text-[#fff9f0] hover:bg-[#a75439]">
               Take a look <span className="ml-3" aria-hidden="true">↘</span>
             </a>
+            <div className="mt-8 grid max-w-[660px] gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                ["Decks", decks.length],
+                ["Color groups", colorCount],
+                ["Format", "Commander"],
+                ["Focus", featuredDeck.strategy],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-[8px] border border-[#e1d3be] bg-[#f5ebde] p-3">
+                  <div className="text-[10px] font-extrabold uppercase tracking-[1.8px] text-[#a95436]">{label}</div>
+                  <div className="mt-2 font-serif text-[28px] leading-none text-[#35271f]">{value}</div>
+                </div>
+              ))}
+            </div>
             <div aria-hidden="true" className="absolute right-3 top-[140px] hidden h-[120px] w-[120px] rotate-12 flex-col items-center justify-center rounded-full border-2 border-[#c8a97e] text-[#ab8055] lg:flex xl:right-16 xl:top-[150px] xl:h-40 xl:w-40">
               <strong className="font-serif text-[46px] font-normal leading-none xl:text-[62px]">04</strong>
               <span className="text-[9px] tracking-[2px] xl:text-[11px]">COMMANDERS</span>
