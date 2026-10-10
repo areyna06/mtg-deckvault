@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 // Original illustrations are saved in public/images, so they work offline.
 // The links below are budget deckbuilding references, not my personal lists.
@@ -51,6 +51,30 @@ const decks = [
 
 function App() {
   const [openDeck, setOpenDeck] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tagFilter, setTagFilter] = useState("All");
+
+  const tags = ["All", ...new Set(decks.map((deck) => deck.colors))];
+
+  const filteredDecks = useMemo(() => {
+    const normalizedQuery = searchTerm.trim().toLowerCase();
+
+    return decks.filter((deck) => {
+      const matchesTag = tagFilter === "All" || deck.colors === tagFilter;
+      const searchableText = [
+        deck.name,
+        deck.colors,
+        deck.strategy,
+        deck.description,
+        ...deck.cards,
+      ]
+        .join(" ")
+        .toLowerCase();
+      const matchesSearch = !normalizedQuery || searchableText.includes(normalizedQuery);
+
+      return matchesTag && matchesSearch;
+    });
+  }, [searchTerm, tagFilter]);
 
   return (
     <div className="min-h-screen bg-[#f5efe4] text-[#35271f]">
@@ -95,54 +119,90 @@ function App() {
                 <span className="text-[11px] font-extrabold tracking-[2.3px] text-[#a95436]">01 / THE COLLECTION</span>
                 <h2 className="mt-3 font-serif text-[clamp(30px,4vw,42px)] tracking-[-1px]">Meet the commanders</h2>
               </div>
-              <p className="text-[13px] text-[#857569]">Commander format · 100 cards each</p>
+              <p className="text-[13px] text-[#857569]">Commander format · {filteredDecks.length} visible deck{filteredDecks.length === 1 ? "" : "s"}</p>
             </div>
 
-            <div className="grid gap-[22px] lg:grid-cols-2">
-              {decks.map((deck, index) => (
-                <article key={deck.id} className="grid min-w-0 overflow-hidden rounded-[9px] border border-[#e2d5c6] bg-[#fffaf3] shadow-[0_6px_20px_rgba(73,42,20,0.04)] sm:grid-cols-[43%_57%]">
-                  <div className={`relative flex min-h-[240px] items-center justify-center px-[18px] py-6 sm:min-h-[300px] ${deck.background}`}>
-                    <span className="absolute left-4 top-3 text-[11px] font-bold tracking-[2px] text-white/75">0{index + 1}</span>
-                    <img
-                      className="h-[225px] w-[170px] max-w-full rounded-[9px] object-cover object-center shadow-[0_12px_25px_#0005] sm:h-[255px] sm:w-[185px]"
-                      src={deck.image}
-                      alt={`Fantasy illustration representing ${deck.name}`}
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="flex min-w-0 flex-col items-start p-[22px] sm:p-[26px]">
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[1.4px] text-[#ab6245]">
-                      COMMANDER · {deck.strategy}
-                    </p>
-                    <h3 className="mb-3 font-serif text-[clamp(20px,2vw,25px)] leading-[1.18]">{deck.name}</h3>
-                    <p className="mb-3 text-xs font-bold text-[#615349]">{deck.colors}</p>
-                    <p className="mb-[18px] text-[13px] leading-[1.55] text-[#7b6c60]">{deck.description}</p>
-                    <div className="mt-auto flex flex-wrap gap-[9px]">
-                      <a className="inline-flex items-center rounded bg-[#3c302a] px-3 py-[11px] text-xs font-bold text-[#fffaf3] hover:bg-[#a95436]"
-                         href={deck.decklist} target="_blank" rel="noopener noreferrer">
-                        Budget decklist ↗
-                      </a>
-                      <button type="button" className="cursor-pointer rounded border border-[#d1bfad] bg-transparent px-3 py-[10px] text-xs font-bold text-[#5e4a40] hover:bg-[#f4e8dc]"
-                        aria-expanded={openDeck === deck.id}
-                        onClick={() => setOpenDeck(openDeck === deck.id ? null : deck.id)}>
-                        {openDeck === deck.id ? "Less −" : "Quick look +"}
-                      </button>
-                    </div>
-                  </div>
-                  {openDeck === deck.id && (
-                    <div className="border-t border-[#dfd0be] bg-[#f4eadd] px-[22px] py-[18px] text-[13px] sm:col-span-2">
-                      <strong>A few cards to explore for this theme:</strong>
-                      <ul className="my-[10px] list-disc pl-[22px] leading-[1.7]">
-                        {deck.cards.map((card) => <li key={card}>{card}</li>)}
-                      </ul>
-                      <p className="mt-[10px] text-xs leading-normal text-[#7e6c5c]">
-                        These are example synergy ideas, not a verified copy of the linked decklist or my own collection.
-                      </p>
-                    </div>
-                  )}
-                </article>
-              ))}
+            <div className="mb-6 rounded-[10px] border border-[#e2d5c6] bg-[#fffaf3] p-4 shadow-[0_6px_18px_rgba(73,42,20,0.03)]">
+              <label htmlFor="deck-search" className="mb-2 block text-[11px] font-extrabold tracking-[2px] text-[#a95436] uppercase">
+                Search the shelf
+              </label>
+              <input
+                id="deck-search"
+                type="text"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Try: token, elves, lifegain, or black"
+                className="w-full rounded border border-[#d8c7af] bg-[#f9f4ee] px-3 py-2.5 text-sm text-[#35271f] outline-none transition focus:border-[#a95436] focus:ring-2 focus:ring-[#e8cbbb]"
+              />
+              <div className="mt-4 flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => setTagFilter(tag)}
+                    className={`rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-[1.2px] transition ${
+                      tagFilter === tag
+                        ? "border-[#a95436] bg-[#a95436] text-white"
+                        : "border-[#d6c3a5] bg-transparent text-[#5e4a40] hover:bg-[#f3e6d9]"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {filteredDecks.length === 0 ? (
+              <div className="rounded-[12px] border border-dashed border-[#d9cbbb] bg-[#fffaf3] p-8 text-center text-sm text-[#6a584f]">
+                No decks match your current search. Try a broader keyword or switch the filter tag.
+              </div>
+            ) : (
+              <div className="grid gap-[22px] lg:grid-cols-2">
+                {filteredDecks.map((deck, index) => (
+                  <article key={deck.id} className="grid min-w-0 overflow-hidden rounded-[9px] border border-[#e2d5c6] bg-[#fffaf3] shadow-[0_6px_20px_rgba(73,42,20,0.04)] sm:grid-cols-[43%_57%]">
+                    <div className={`relative flex min-h-[240px] items-center justify-center px-[18px] py-6 sm:min-h-[300px] ${deck.background}`}>
+                      <span className="absolute left-4 top-3 text-[11px] font-bold tracking-[2px] text-white/75">0{index + 1}</span>
+                      <img
+                        className="h-[225px] w-[170px] max-w-full rounded-[9px] object-cover object-center shadow-[0_12px_25px_#0005] sm:h-[255px] sm:w-[185px]"
+                        src={deck.image}
+                        alt={`Fantasy illustration representing ${deck.name}`}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="flex min-w-0 flex-col items-start p-[22px] sm:p-[26px]">
+                      <p className="mb-3 text-[10px] font-bold uppercase tracking-[1.4px] text-[#ab6245]">
+                        COMMANDER · {deck.strategy}
+                      </p>
+                      <h3 className="mb-3 font-serif text-[clamp(20px,2vw,25px)] leading-[1.18]">{deck.name}</h3>
+                      <p className="mb-3 text-xs font-bold text-[#615349]">{deck.colors}</p>
+                      <p className="mb-[18px] text-[13px] leading-[1.55] text-[#7b6c60]">{deck.description}</p>
+                      <div className="mt-auto flex flex-wrap gap-[9px]">
+                        <a className="inline-flex items-center rounded bg-[#3c302a] px-3 py-[11px] text-xs font-bold text-[#fffaf3] hover:bg-[#a95436]"
+                           href={deck.decklist} target="_blank" rel="noopener noreferrer">
+                          Budget decklist ↗
+                        </a>
+                        <button type="button" className="cursor-pointer rounded border border-[#d1bfad] bg-transparent px-3 py-[10px] text-xs font-bold text-[#5e4a40] hover:bg-[#f4e8dc]"
+                          aria-expanded={openDeck === deck.id}
+                          onClick={() => setOpenDeck(openDeck === deck.id ? null : deck.id)}>
+                          {openDeck === deck.id ? "Less −" : "Quick look +"}
+                        </button>
+                      </div>
+                    </div>
+                    {openDeck === deck.id && (
+                      <div className="border-t border-[#dfd0be] bg-[#f4eadd] px-[22px] py-[18px] text-[13px] sm:col-span-2">
+                        <strong>A few cards to explore for this theme:</strong>
+                        <ul className="my-[10px] list-disc pl-[22px] leading-[1.7]">
+                          {deck.cards.map((card) => <li key={card}>{card}</li>)}
+                        </ul>
+                        <p className="mt-[10px] text-xs leading-normal text-[#7e6c5c]">
+                          These are example synergy ideas, not a verified copy of the linked decklist or my own collection.
+                        </p>
+                      </div>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
             <p className="mt-[25px] max-w-[800px] text-xs leading-[1.7] text-[#87776a]">
               Decklist links open EDHREC's budget-filtered Bracket 3 (Upgraded) average builds. They're ideas to explore,
               not verified copies of my personal decks. Prices and power levels may vary.
