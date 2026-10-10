@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import CardPriceChecker from "./components/CardPriceChecker.jsx";
 
 // Original illustrations are saved in public/images, so they work offline.
 // The links below are budget deckbuilding references, not my personal lists.
@@ -213,6 +214,7 @@ function App() {
                         <p className="mt-[10px] text-xs leading-normal text-[#7e6c5c]">
                           These are example synergy ideas, not a verified copy of the linked decklist or my own collection.
                         </p>
+                        <CardPriceChecker cardNames={deck.cards} />
                       </div>
                     )}
                   </article>
