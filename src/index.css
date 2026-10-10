@@ -1,6 +1,4 @@
-/* Reset the default Vite stylesheet. */
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: #f6f0e6; color: #332720; font-family: Arial, Helvetica, sans-serif; }
-a, button { -webkit-tap-highlight-color: transparent; }
-button { font-family: inherit; }
+/* Tailwind CSS v4 supplies the layout, typography, colors, and responsive styling. */
+@import "tailwindcss";
+
+/* No handwritten component styles: everything else is a Tailwind class in App.jsx. */
